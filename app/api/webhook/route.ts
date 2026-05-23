@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { adicionarNota } from "@/lib/storage";
 import { validarNotaEntrada } from "@/lib/validacao";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 const API_KEY = process.env.API_KEY ?? "";
 
 function autorizado(request: NextRequest): boolean {

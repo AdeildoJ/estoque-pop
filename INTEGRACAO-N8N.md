@@ -10,12 +10,21 @@ Email → n8n (filtro remetente) → PDF/XML → IA gera JSON → HTTP POST → 
 
 ## 1. Subir o sistema localmente
 
+Crie `.env.local` com as variáveis do Upstash (mesmas da Vercel):
+
+```
+KV_REST_API_URL=https://xxxx.upstash.io
+KV_REST_API_TOKEN=seu_token_de_escrita
+```
+
 ```bash
 npm install
 npm run dev
 ```
 
 Acesse: http://localhost:3000
+
+> O sistema usa **apenas Redis** — não há gravação em arquivos locais.
 
 ## 2. Configurar no n8n
 
@@ -68,7 +77,8 @@ O webhook também aceita nomes alternativos:
 - `valor_nota`, `valor` → valorNota
 - `produto`, `descricao` → nome
 - `qtd`, `quantidadeUnitaria` → quantidade
-- `valor_unitario`, `preco` → valorUnitario
+- `valor_unitario`, `preco`, `valorUnit` → valorUnitario
+- `capacidade` → capacidadeMaxima
 
 ## 3. Prompt sugerido para o nó de IA no n8n
 
@@ -135,8 +145,9 @@ O n8n **bloqueia `localhost`** por segurança (proteção SSRF). Se você usa n8
    ```
    Siga o assistente (linkar ao GitHub ou deploy direto).
 
-3. No painel da Vercel → seu projeto → **Storage** → **Create Database** → **Upstash Redis** (grátis).
-   - Conecte ao projeto (cria `UPSTASH_REDIS_REST_URL` e `UPSTASH_REDIS_REST_TOKEN`).
+3. No painel da Vercel → seu projeto **estoque-pop** → **Storage** → **Upstash Redis** → **Connect**.
+   - Isso cria `KV_REST_API_URL` e `KV_REST_API_TOKEN` automaticamente.
+   - Use o token de **escrita** (`KV_REST_API_TOKEN`), não o `READ_ONLY`.
 
 4. **Redeploy** o projeto após conectar o Redis (Deployments → ⋯ → Redeploy).
 

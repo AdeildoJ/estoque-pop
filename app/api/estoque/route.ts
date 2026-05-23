@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { lerEstoque } from "@/lib/storage";
 import { estoqueBaixo, percentualEstoque } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET() {
   let data;
   try {
