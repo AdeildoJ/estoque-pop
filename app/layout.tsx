@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import AppShell from "@/components/AppShell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Estoque Hospital",
-  description: "Controle de estoque do hospital",
+  title: "nutriSYNC — NutriStore",
+  description: "Controle de estoque NutriStore",
 };
 
 export default function RootLayout({
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }

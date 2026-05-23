@@ -9,8 +9,7 @@ const API_KEY = process.env.API_KEY ?? "";
 
 function autorizado(request: NextRequest): boolean {
   if (!API_KEY) return true;
-  const key = request.headers.get("x-api-key");
-  return key === API_KEY;
+  return request.headers.get("x-api-key") === API_KEY;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,13 +37,24 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const nota = await adicionarNota(resultado.data);
+    const res = await adicionarNota(resultado.data);
+
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          sucesso: false,
+          duplicada: true,
+          mensagem: `Nota ${res.numeroNota} já foi registrada anteriormente`,
+        },
+        { status: 409 }
+      );
+    }
 
     return NextResponse.json(
       {
         sucesso: true,
         mensagem: "Nota fiscal registrada no estoque",
-        nota,
+        nota: res.nota,
       },
       { status: 201 }
     );
@@ -58,25 +68,12 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const accept = request.headers.get("accept") ?? "";
   if (accept.includes("text/html")) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/estoque", request.url));
   }
 
   return NextResponse.json({
-    aviso: "Esta URL é só para o n8n (POST). Para ver o estoque, abra a raiz do site: /",
     endpoint: "/api/webhook",
     metodo: "POST",
-    tela: "/",
-    exemplo: {
-      numeroNota: "12345",
-      valorNota: 1500.0,
-      produtos: [
-        {
-          nome: "Luva cirúrgica",
-          quantidade: 50,
-          valorUnitario: 2.5,
-          capacidadeMaxima: 500,
-        },
-      ],
-    },
+    tela: "/estoque",
   });
 }

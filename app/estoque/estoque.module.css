@@ -1,0 +1,222 @@
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.titulo {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--nutri-header);
+}
+
+.subtitulo {
+  font-size: 0.85rem;
+  color: var(--nutri-text-muted);
+  margin-top: 0.2rem;
+}
+
+.btnAtualizar {
+  padding: 0.5rem 1rem;
+  background: var(--nutri-header);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.btnAtualizar:hover {
+  background: var(--nutri-header-dark);
+}
+
+.banner {
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.bannerAlerta {
+  background: var(--nutri-danger-bg);
+  border: 1px solid var(--nutri-danger-border);
+  color: var(--nutri-danger);
+}
+
+.mensagem,
+.erro,
+.vazio {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--nutri-text-muted);
+}
+
+.erro {
+  color: var(--nutri-danger);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notaCard {
+  background: var(--nutri-surface);
+  border: 1px solid var(--nutri-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.notaTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--nutri-menu-bg);
+  border-bottom: 1px solid var(--nutri-border);
+  flex-wrap: wrap;
+}
+
+.notaInfo {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.notaCampo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.notaLabel {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--nutri-text-muted);
+}
+
+.notaValor {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--nutri-header);
+}
+
+.notaData {
+  font-size: 0.78rem;
+  color: var(--nutri-text-muted);
+}
+
+.btnEditar {
+  padding: 0.4rem 0.9rem;
+  background: var(--nutri-header);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btnEditar:hover {
+  background: var(--nutri-header-dark);
+}
+
+.produtos {
+  display: flex;
+  flex-direction: column;
+}
+
+.produtoRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--nutri-border);
+  font-size: 0.85rem;
+}
+
+.produtoRow:last-child {
+  border-bottom: none;
+}
+
+.produtoRowAlerta {
+  background: var(--nutri-danger-bg);
+}
+
+.produtoRowInativo {
+  opacity: 0.65;
+}
+
+.produtoNome {
+  font-weight: 500;
+  color: var(--nutri-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.col {
+  text-align: right;
+  white-space: nowrap;
+  color: var(--nutri-text-muted);
+  font-size: 0.8rem;
+}
+
+.col strong {
+  color: var(--nutri-text);
+  font-weight: 600;
+}
+
+.badgeAlerta {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--nutri-danger);
+  background: #fff;
+  border: 1px solid var(--nutri-danger-border);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.badgeInativo {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--nutri-inactive);
+  background: #f5f5f5;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.barraMini {
+  width: 60px;
+  height: 4px;
+  background: var(--nutri-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.barraFill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  .produtoRow {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .col {
+    text-align: left;
+  }
+}

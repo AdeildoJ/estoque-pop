@@ -1,0 +1,22 @@
+.placeholder {
+  background: var(--nutri-surface);
+  border: 1px solid var(--nutri-border);
+  border-radius: var(--radius);
+  padding: 3rem 2rem;
+  text-align: center;
+  max-width: 480px;
+  margin: 2rem auto;
+  box-shadow: var(--shadow);
+}
+
+.titulo {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--nutri-header);
+  margin-bottom: 0.5rem;
+}
+
+.texto {
+  color: var(--nutri-text-muted);
+  font-size: 0.95rem;
+}
