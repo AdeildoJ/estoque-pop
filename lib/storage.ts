@@ -1,9 +1,11 @@
 import type {
   EstoqueData,
+  ItemCompra,
   NotaEntrada,
   NotaFiscal,
   Produto,
   ProdutoConfigUpdate,
+  ProdutoEstoque,
 } from "./types";
 import { normalizarNumeroNota, normalizarProduto } from "./types";
 import { getRedis } from "./redis";
@@ -185,4 +187,87 @@ export async function atualizarConfigNota(
   await persistirNotas(notas);
 
   return notaAtualizada;
+}
+
+export async function listarProdutosEstoque(): Promise<ProdutoEstoque[]> {
+  const { notas } = await lerEstoque();
+  const produtos: ProdutoEstoque[] = [];
+
+  for (const nota of notas) {
+    for (const p of nota.produtos) {
+      const prod = normalizarProduto(p);
+      if (prod.quantidade <= 0) continue;
+      produtos.push({
+        notaId: nota.id,
+        numeroNota: nota.numeroNota,
+        produtoId: prod.id,
+        nome: prod.nome,
+        quantidade: prod.quantidade,
+        valorUnitario: prod.valorUnitario,
+        ativo: prod.ativo,
+      });
+    }
+  }
+
+  return produtos.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+export type ResultadoCompra =
+  | { ok: true; itensProcessados: number }
+  | { ok: false; erro: string };
+
+export async function processarCompra(
+  itens: ItemCompra[]
+): Promise<ResultadoCompra> {
+  if (!itens.length) {
+    return { ok: false, erro: "Carrinho vazio" };
+  }
+
+  const { notas } = await lerEstoque();
+  const erros: string[] = [];
+
+  for (const item of itens) {
+    const nota = notas.find((n) => n.id === item.notaId);
+    if (!nota) {
+      erros.push(`Nota não encontrada para o produto`);
+      continue;
+    }
+
+    const prodIdx = nota.produtos.findIndex((p) => p.id === item.produtoId);
+    if (prodIdx === -1) {
+      erros.push(`Produto não encontrado`);
+      continue;
+    }
+
+    const prod = normalizarProduto(nota.produtos[prodIdx]);
+
+    if (!prod.ativo) {
+      erros.push(`${prod.nome}: produto inativo`);
+      continue;
+    }
+
+    if (item.quantidade <= 0) {
+      erros.push(`${prod.nome}: quantidade inválida`);
+      continue;
+    }
+
+    if (item.quantidade > prod.quantidade) {
+      erros.push(
+        `${prod.nome}: estoque insuficiente (disponível: ${prod.quantidade})`
+      );
+      continue;
+    }
+
+    nota.produtos[prodIdx] = {
+      ...prod,
+      quantidade: prod.quantidade - item.quantidade,
+    };
+  }
+
+  if (erros.length) {
+    return { ok: false, erro: erros.join("; ") };
+  }
+
+  await persistirNotas(notas);
+  return { ok: true, itensProcessados: itens.length };
 }

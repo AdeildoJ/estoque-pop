@@ -72,3 +72,19 @@ export function estoqueBaixo(produto: Produto): boolean {
   const p = normalizarProduto(produto);
   return percentualEstoque(p) < p.percentualSeguranca;
 }
+
+export interface ProdutoEstoque {
+  notaId: string;
+  numeroNota: string;
+  produtoId: string;
+  nome: string;
+  quantidade: number;
+  valorUnitario: number;
+  ativo: boolean;
+}
+
+export interface ItemCompra {
+  notaId: string;
+  produtoId: string;
+  quantidade: number;
+}

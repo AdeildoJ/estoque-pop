@@ -179,7 +179,7 @@ export default function EstoquePage() {
                   </div>
                   <div className={styles.col}>
                     {!p.ativo && (
-                      <span className={styles.badgeInativo}>Sem compra</span>
+                      <span className={styles.badgeInativo}>Inativo</span>
                     )}
                     {p.alerta && (
                       <span className={styles.badgeAlerta}>Baixo</span>

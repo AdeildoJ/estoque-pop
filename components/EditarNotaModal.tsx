@@ -127,7 +127,7 @@ export default function EditarNotaModal({
               </div>
               <div className={styles.toggleRow}>
                 <span className={styles.toggleLabel}>
-                  Permitir compra {p.ativo ? "(ativo)" : "(inativo)"}
+                  Status {p.ativo ? "(ativo)" : "(inativo)"}
                 </span>
                 <button
                   type="button"

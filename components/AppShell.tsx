@@ -2,30 +2,49 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import styles from "./AppShell.module.css";
-
-const ICONS = ["⌂", "▤", "⚕", "👤", "⊕", "⚙", "☰", "▦", "▥", "📱"];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isEstoque = pathname.startsWith("/estoque");
   const isCompra = pathname.startsWith("/compra");
+  const [menuAberto, setMenuAberto] = useState(false);
+
+  useEffect(() => {
+    setMenuAberto(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const handler = () => {
+      if (mq.matches) setMenuAberto(true);
+    };
+    handler();
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  function toggleMenu() {
+    setMenuAberto((v) => !v);
+  }
 
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <button type="button" className={styles.menuBtn} aria-label="Menu">
+          <button
+            type="button"
+            className={styles.menuBtn}
+            onClick={toggleMenu}
+            aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={menuAberto}
+          >
             ☰
           </button>
           <div className={styles.logo}>
             <span className={styles.logoNutri}>nutri</span>
             <span className={styles.logoSync}>SYNC</span>
-          </div>
-          <div className={styles.unidade}>
-            <span>🏥</span>
-            <span>Unimed Piracicaba</span>
-            <span>▾</span>
           </div>
         </div>
         <div className={styles.headerRight}>
@@ -35,41 +54,61 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className={styles.body}>
-        <nav className={styles.iconRail} aria-label="Menu principal">
-          {ICONS.map((icon, i) => (
-            <button
-              key={icon}
-              type="button"
-              className={`${styles.iconBtn} ${i === 0 ? styles.iconBtnActive : ""}`}
-              aria-hidden
-            >
-              {icon}
-            </button>
-          ))}
+        <nav className={styles.iconRail} aria-label="NutriStore">
+          <button
+            type="button"
+            className={`${styles.nsBtn} ${menuAberto ? styles.nsBtnActive : ""}`}
+            onClick={toggleMenu}
+            title="NutriStore"
+            aria-label="Abrir menu NutriStore"
+            aria-expanded={menuAberto}
+          >
+            <span className={styles.nsMark}>NS</span>
+          </button>
         </nav>
 
-        <aside className={styles.subSidebar}>
+        {menuAberto && (
+          <button
+            type="button"
+            className={styles.backdrop}
+            onClick={() => setMenuAberto(false)}
+            aria-label="Fechar menu"
+          />
+        )}
+
+        <aside
+          className={`${styles.subSidebar} ${menuAberto ? styles.subSidebarAberto : ""}`}
+        >
           <div className={styles.subHeader}>
             <h2 className={styles.subTitle}>NutriStore</h2>
           </div>
           <nav className={styles.subNav}>
-            <span className={styles.navGroupLabel}>NutriStore</span>
             <Link
               href="/estoque"
               className={`${styles.navItem} ${isEstoque ? styles.navItemActive : ""}`}
+              onClick={() => {
+                if (window.innerWidth < 1024) setMenuAberto(false);
+              }}
             >
               Estoque
             </Link>
             <Link
               href="/compra"
               className={`${styles.navItem} ${isCompra ? styles.navItemActive : ""}`}
+              onClick={() => {
+                if (window.innerWidth < 1024) setMenuAberto(false);
+              }}
             >
               Compra
             </Link>
           </nav>
         </aside>
 
-        <main className={styles.main}>{children}</main>
+        <main
+          className={`${styles.main} ${menuAberto ? styles.mainComMenu : ""}`}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );
