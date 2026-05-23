@@ -9,10 +9,29 @@ function paraNumero(valor: unknown): number | undefined {
   return undefined;
 }
 
+function desembrulhar(body: unknown): unknown {
+  if (Array.isArray(body) && body.length > 0) return desembrulhar(body[0]);
+  if (!body || typeof body !== "object") return body;
+
+  const b = body as Record<string, unknown>;
+  const temNota =
+    b.numeroNota ?? b.numero_nota ?? b.nota;
+  const temProdutos = b.produtos ?? b.items ?? b.itens;
+
+  if (temNota && temProdutos) return body;
+  if (b.json) return desembrulhar(b.json);
+  if (b.data) return desembrulhar(b.data);
+  if (b.body) return desembrulhar(b.body);
+
+  return body;
+}
+
 export function validarNotaEntrada(body: unknown): {
   ok: true;
   data: NotaEntrada;
 } | { ok: false; erro: string } {
+  body = desembrulhar(body);
+
   if (!body || typeof body !== "object") {
     return { ok: false, erro: "Corpo da requisição inválido" };
   }
@@ -23,8 +42,12 @@ export function validarNotaEntrada(body: unknown): {
   const valorNota = b.valorNota ?? b.valor_nota ?? b.valor;
   const produtosRaw = b.produtos ?? b.items ?? b.itens;
 
-  if (!numeroNota || typeof numeroNota !== "string") {
-    return { ok: false, erro: "Campo 'numeroNota' é obrigatório (string)" };
+  if (
+    numeroNota === undefined ||
+    numeroNota === null ||
+    (typeof numeroNota !== "string" && typeof numeroNota !== "number")
+  ) {
+    return { ok: false, erro: "Campo 'numeroNota' é obrigatório" };
   }
 
   const valorNotaNum = paraNumero(valorNota);

@@ -34,16 +34,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ erro: resultado.erro }, { status: 400 });
   }
 
-  const nota = await adicionarNota(resultado.data);
+  try {
+    const nota = await adicionarNota(resultado.data);
 
-  return NextResponse.json(
-    {
-      sucesso: true,
-      mensagem: "Nota fiscal registrada no estoque",
-      nota,
-    },
-    { status: 201 }
-  );
+    return NextResponse.json(
+      {
+        sucesso: true,
+        mensagem: "Nota fiscal registrada no estoque",
+        nota,
+      },
+      { status: 201 }
+    );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Erro ao salvar no estoque";
+    console.error("[webhook]", e);
+    return NextResponse.json({ erro: msg }, { status: 500 });
+  }
 }
 
 export async function GET(request: NextRequest) {
