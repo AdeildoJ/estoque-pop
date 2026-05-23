@@ -69,7 +69,10 @@ export function validarNotaEntrada(body: unknown): {
       p.quantidade ?? p.qtd ?? p.quantidadeUnitaria
     );
     const valorUnitario = paraNumero(
-      p.valorUnitario ?? p.valor_unitario ?? p.preco
+      p.valorUnitario ??
+        p.valorUnit ??
+        p.valor_unitario ??
+        p.preco
     );
     const capacidadeMaxima = paraNumero(
       p.capacidadeMaxima ?? p.capacidade_maxima ?? p.capacidade
@@ -82,7 +85,9 @@ export function validarNotaEntrada(body: unknown): {
       throw new Error(`Produto ${i + 1}: 'quantidade' ou 'qtd' é obrigatório`);
     }
     if (valorUnitario === undefined) {
-      throw new Error(`Produto ${i + 1}: 'valorUnitario' é obrigatório`);
+      throw new Error(
+        `Produto ${i + 1}: 'valorUnitario' ou 'valorUnit' é obrigatório`
+      );
     }
 
     return {

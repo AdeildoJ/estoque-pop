@@ -1,6 +1,11 @@
 import { Redis } from "@upstash/redis";
 import type { EstoqueData, NotaEntrada, NotaFiscal, Produto } from "./types";
 import { lerEstoqueLocal, salvarEstoqueLocal } from "./storage-local";
+import {
+  adicionarNoSupabase,
+  lerDoSupabase,
+  usaSupabase,
+} from "./storage-supabase";
 
 const LIST_KEY = "estoque:notas";
 const LEGACY_KEY = "estoque-hospital";
@@ -19,6 +24,10 @@ function getRedis(): Redis | null {
 
 function usaRedis(): boolean {
   return getRedis() !== null;
+}
+
+function emProducao(): boolean {
+  return process.env.VERCEL === "1";
 }
 
 function gerarId(): string {
@@ -56,30 +65,23 @@ async function migrarLegadoSeNecessario(redis: Redis): Promise<void> {
 }
 
 async function lerDoRedis(): Promise<EstoqueData> {
-  try {
-    const redis = getRedis()!;
+  const redis = getRedis()!;
 
-    let lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
+  let lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
 
-    if (!lista?.length) {
-      await migrarLegadoSeNecessario(redis);
-      lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
-    }
-
-    if (!lista?.length) return EMPTY;
-
-    return {
-      notas: lista.filter(
-        (n): n is NotaFiscal =>
-          Boolean(n && typeof n === "object" && "numeroNota" in n)
-      ),
-    };
-  } catch (e) {
-    console.error("[redis ler]", e);
-    throw new Error(
-      "Erro ao ler Redis. Verifique Upstash na Vercel (Storage → Redis → Redeploy)."
-    );
+  if (!lista?.length) {
+    await migrarLegadoSeNecessario(redis);
+    lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
   }
+
+  if (!lista?.length) return EMPTY;
+
+  return {
+    notas: lista.filter(
+      (n): n is NotaFiscal =>
+        Boolean(n && typeof n === "object" && "numeroNota" in n)
+    ),
+  };
 }
 
 async function adicionarNoRedis(nota: NotaFiscal): Promise<void> {
@@ -88,20 +90,25 @@ async function adicionarNoRedis(nota: NotaFiscal): Promise<void> {
   await redis.ltrim(LIST_KEY, 0, MAX_NOTAS - 1);
 }
 
+function erroArmazenamento(): Error {
+  return new Error(
+    "Banco não configurado na Vercel. Opção A: Storage → Upstash Redis → Connect → Redeploy. " +
+      "Opção B: Supabase grátis — veja CONFIGURAR-BANCO.md no GitHub (estoque-pop)."
+  );
+}
+
 export async function lerEstoque(): Promise<EstoqueData> {
   if (usaRedis()) return lerDoRedis();
+  if (usaSupabase()) return lerDoSupabase();
+  if (emProducao()) throw erroArmazenamento();
   return lerEstoqueLocal();
 }
 
 export async function salvarEstoque(data: EstoqueData): Promise<void> {
-  if (usaRedis()) {
-    throw new Error(
-      "Use adicionarNota() com Redis. Armazenamento em lote não suportado."
-    );
+  if (usaRedis() || usaSupabase()) {
+    throw new Error("Use adicionarNota() para gravar.");
   }
-  salvarEstoqueLocal({
-    notas: data.notas.slice(0, MAX_NOTAS),
-  });
+  salvarEstoqueLocal({ notas: data.notas.slice(0, MAX_NOTAS) });
 }
 
 export async function adicionarNota(entrada: NotaEntrada): Promise<NotaFiscal> {
@@ -112,14 +119,15 @@ export async function adicionarNota(entrada: NotaEntrada): Promise<NotaFiscal> {
     return nota;
   }
 
-  try {
-    const estoque = lerEstoqueLocal();
-    estoque.notas.unshift(nota);
-    salvarEstoqueLocal({ notas: estoque.notas.slice(0, MAX_NOTAS) });
+  if (usaSupabase()) {
+    await adicionarNoSupabase(nota);
     return nota;
-  } catch {
-    throw new Error(
-      "Armazenamento indisponível. Conecte Upstash Redis na Vercel (Storage → Redis → Redeploy)."
-    );
   }
+
+  if (emProducao()) throw erroArmazenamento();
+
+  const estoque = lerEstoqueLocal();
+  estoque.notas.unshift(nota);
+  salvarEstoqueLocal({ notas: estoque.notas.slice(0, MAX_NOTAS) });
+  return nota;
 }
