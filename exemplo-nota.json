@@ -1,0 +1,24 @@
+{
+  "numeroNota": "NF-2024-001234",
+  "valorNota": 4850.75,
+  "produtos": [
+    {
+      "nome": "Luva cirúrgica estéril",
+      "quantidade": 45,
+      "valorUnitario": 2.5,
+      "capacidadeMaxima": 500
+    },
+    {
+      "nome": "Seringa 10ml",
+      "quantidade": 8,
+      "valorUnitario": 1.2,
+      "capacidadeMaxima": 200
+    },
+    {
+      "nome": "Máscara N95",
+      "quantidade": 120,
+      "valorUnitario": 4.8,
+      "capacidadeMaxima": 300
+    }
+  ]
+}
