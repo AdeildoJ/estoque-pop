@@ -56,23 +56,30 @@ async function migrarLegadoSeNecessario(redis: Redis): Promise<void> {
 }
 
 async function lerDoRedis(): Promise<EstoqueData> {
-  const redis = getRedis()!;
+  try {
+    const redis = getRedis()!;
 
-  let lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
+    let lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
 
-  if (!lista?.length) {
-    await migrarLegadoSeNecessario(redis);
-    lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
+    if (!lista?.length) {
+      await migrarLegadoSeNecessario(redis);
+      lista = await redis.lrange<NotaFiscal>(LIST_KEY, 0, MAX_NOTAS - 1);
+    }
+
+    if (!lista?.length) return EMPTY;
+
+    return {
+      notas: lista.filter(
+        (n): n is NotaFiscal =>
+          Boolean(n && typeof n === "object" && "numeroNota" in n)
+      ),
+    };
+  } catch (e) {
+    console.error("[redis ler]", e);
+    throw new Error(
+      "Erro ao ler Redis. Verifique Upstash na Vercel (Storage → Redis → Redeploy)."
+    );
   }
-
-  if (!lista?.length) return EMPTY;
-
-  return {
-    notas: lista.filter(
-      (n): n is NotaFiscal =>
-        Boolean(n && typeof n === "object" && "numeroNota" in n)
-    ),
-  };
 }
 
 async function adicionarNoRedis(nota: NotaFiscal): Promise<void> {

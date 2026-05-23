@@ -3,7 +3,13 @@ import { lerEstoque } from "@/lib/storage";
 import { estoqueBaixo, percentualEstoque } from "@/lib/types";
 
 export async function GET() {
-  const data = await lerEstoque();
+  let data;
+  try {
+    data = await lerEstoque();
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "Erro ao carregar estoque";
+    return NextResponse.json({ erro: msg, notas: [], resumo: { totalNotas: 0, produtosEmAlerta: 0 } }, { status: 500 });
+  }
 
   const notas = data.notas.map((nota) => ({
     ...nota,

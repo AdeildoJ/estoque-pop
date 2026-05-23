@@ -7,22 +7,21 @@ const DATA_FILE = path.join(DATA_DIR, "estoque.json");
 
 const EMPTY: EstoqueData = { notas: [] };
 
-function ensureDataFile(): void {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(DATA_FILE)) {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(EMPTY, null, 2), "utf-8");
-  }
-}
-
 export function lerEstoqueLocal(): EstoqueData {
-  ensureDataFile();
-  const raw = fs.readFileSync(DATA_FILE, "utf-8");
-  return JSON.parse(raw) as EstoqueData;
+  try {
+    if (!fs.existsSync(DATA_FILE)) return EMPTY;
+    const raw = fs.readFileSync(DATA_FILE, "utf-8");
+    const data = JSON.parse(raw) as EstoqueData;
+    if (!Array.isArray(data.notas)) return EMPTY;
+    return data;
+  } catch {
+    return EMPTY;
+  }
 }
 
 export function salvarEstoqueLocal(data: EstoqueData): void {
-  ensureDataFile();
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
 }
