@@ -8,7 +8,14 @@ export const runtime = "nodejs";
 const API_KEY = process.env.API_KEY ?? "";
 
 function autorizado(request: NextRequest): boolean {
-  if (!API_KEY) return true;
+  if (!API_KEY) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn(
+        "[webhook] API_KEY não configurada — endpoint aberto a qualquer POST"
+      );
+    }
+    return true;
+  }
   return request.headers.get("x-api-key") === API_KEY;
 }
 

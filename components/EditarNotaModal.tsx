@@ -1,16 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { ProdutoEditavel } from "@/lib/types";
 import styles from "./EditarNotaModal.module.css";
-
-export interface ProdutoEditavel {
-  id: string;
-  nome: string;
-  quantidade: number;
-  valorReferencia: number;
-  percentualSeguranca: number;
-  ativo: boolean;
-}
 
 interface Props {
   notaId: string;
@@ -20,6 +12,41 @@ interface Props {
   onSalvo: () => void;
 }
 
+type CamposNumericos = "valorReferencia" | "percentualSeguranca";
+
+interface ProdutoForm {
+  id: string;
+  nome: string;
+  quantidade: number;
+  valorReferencia: string;
+  percentualSeguranca: string;
+  ativo: boolean;
+}
+
+function paraForm(produtos: ProdutoEditavel[]): ProdutoForm[] {
+  return produtos.map((p) => ({
+    id: p.id,
+    nome: p.nome,
+    quantidade: p.quantidade,
+    valorReferencia: String(p.valorReferencia),
+    percentualSeguranca: String(p.percentualSeguranca),
+    ativo: p.ativo,
+  }));
+}
+
+function parseInteiro(valor: string, min: number, max?: number): number | null {
+  const n = Number(valor.trim());
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < min) return null;
+  if (max !== undefined && n > max) return null;
+  return n;
+}
+
+function parsePercentual(valor: string): number | null {
+  const n = Number(valor.trim().replace(",", "."));
+  if (!Number.isFinite(n) || n < 0 || n > 100) return null;
+  return n;
+}
+
 export default function EditarNotaModal({
   notaId,
   numeroNota,
@@ -27,39 +54,80 @@ export default function EditarNotaModal({
   onFechar,
   onSalvo,
 }: Props) {
-  const [produtos, setProdutos] = useState(iniciais);
+  const [produtos, setProdutos] = useState(() => paraForm(iniciais));
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    setProdutos(iniciais);
-  }, [iniciais]);
+    setProdutos(paraForm(iniciais));
+  }, [notaId]);
 
-  function atualizar(
+  function atualizarCampo(
     id: string,
-    campo: keyof ProdutoEditavel,
-    valor: number | boolean
+    campo: CamposNumericos,
+    valor: string
   ) {
     setProdutos((prev) =>
       prev.map((p) => (p.id === id ? { ...p, [campo]: valor } : p))
     );
   }
 
+  function validarForm(): {
+    ok: true;
+    dados: {
+      id: string;
+      valorReferencia: number;
+      percentualSeguranca: number;
+      ativo: boolean;
+    }[];
+  } | { ok: false; erro: string } {
+    const dados: {
+      id: string;
+      valorReferencia: number;
+      percentualSeguranca: number;
+      ativo: boolean;
+    }[] = [];
+
+    for (const p of produtos) {
+      const ref = parseInteiro(p.valorReferencia, 1);
+      if (ref === null) {
+        return {
+          ok: false,
+          erro: `"${p.nome}": informe uma quantidade de referência válida (número inteiro ≥ 1).`,
+        };
+      }
+      const seg = parsePercentual(p.percentualSeguranca);
+      if (seg === null) {
+        return {
+          ok: false,
+          erro: `"${p.nome}": informe um percentual de segurança entre 0 e 100.`,
+        };
+      }
+      dados.push({
+        id: p.id,
+        valorReferencia: ref,
+        percentualSeguranca: seg,
+        ativo: p.ativo,
+      });
+    }
+
+    return { ok: true, dados };
+  }
+
   async function salvar() {
+    const validacao = validarForm();
+    if (!validacao.ok) {
+      setErro(validacao.erro);
+      return;
+    }
+
     setSalvando(true);
     setErro(null);
     try {
       const res = await fetch(`/api/notas/${notaId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          produtos: produtos.map((p) => ({
-            id: p.id,
-            valorReferencia: p.valorReferencia,
-            percentualSeguranca: p.percentualSeguranca,
-            ativo: p.ativo,
-          })),
-        }),
+        body: JSON.stringify({ produtos: validacao.dados }),
       });
       if (!res.ok) {
         const j = await res.json();
@@ -89,20 +157,31 @@ export default function EditarNotaModal({
           </button>
         </div>
 
+        <p className={styles.ajuda}>
+          A quantidade de referência é a capacidade máxima usada para calcular o
+          nível de estoque e os alertas.
+        </p>
+
         <div className={styles.modalBody}>
           {produtos.map((p) => (
             <div key={p.id} className={styles.produtoEdit}>
               <div className={styles.produtoNome}>{p.nome}</div>
+              <p className={styles.produtoQtdAtual}>
+                Quantidade atual na nota: <strong>{p.quantidade}</strong>
+              </p>
               <div className={styles.grid}>
                 <div className={styles.field}>
-                  <label htmlFor={`ref-${p.id}`}>Valor de referência</label>
+                  <label htmlFor={`ref-${p.id}`}>
+                    Quantidade de referência
+                  </label>
                   <input
                     id={`ref-${p.id}`}
-                    type="number"
-                    min={1}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={p.valorReferencia}
                     onChange={(e) =>
-                      atualizar(p.id, "valorReferencia", Number(e.target.value))
+                      atualizarCampo(p.id, "valorReferencia", e.target.value)
                     }
                   />
                 </div>
@@ -110,17 +189,11 @@ export default function EditarNotaModal({
                   <label htmlFor={`seg-${p.id}`}>% de segurança</label>
                   <input
                     id={`seg-${p.id}`}
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={0.5}
+                    type="text"
+                    inputMode="decimal"
                     value={p.percentualSeguranca}
                     onChange={(e) =>
-                      atualizar(
-                        p.id,
-                        "percentualSeguranca",
-                        Number(e.target.value)
-                      )
+                      atualizarCampo(p.id, "percentualSeguranca", e.target.value)
                     }
                   />
                 </div>
@@ -132,7 +205,15 @@ export default function EditarNotaModal({
                 <button
                   type="button"
                   className={`${styles.toggle} ${p.ativo ? styles.toggleOn : ""}`}
-                  onClick={() => atualizar(p.id, "ativo", !p.ativo)}
+                  onClick={() =>
+                    setProdutos((prev) =>
+                      prev.map((item) =>
+                        item.id === p.id
+                          ? { ...item, ativo: !item.ativo }
+                          : item
+                      )
+                    )
+                  }
                   aria-pressed={p.ativo}
                 >
                   <span className={styles.toggleKnob} />

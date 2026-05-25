@@ -63,11 +63,9 @@ Após o nó de IA que gera o JSON, adicione um nó **HTTP Request**:
 | produtos[].nome | string | Sim | Nome do produto |
 | produtos[].quantidade | number | Sim | Quantidade em estoque |
 | produtos[].valorUnitario | number | Sim | Preço unitário |
-| produtos[].capacidadeMaxima | number | Não | Capacidade máxima (para alerta de 10%) |
+| produtos[].capacidadeMaxima | number | Não | Ignorado — o backend usa regras fixas |
 
-> **Alerta vermelho:** quando `quantidade / capacidadeMaxima < 10%`, o card fica vermelho na tela.
-
-Se a IA não enviar `capacidadeMaxima`, o sistema usa `max(quantidade, 100)` como padrão.
+> **Alerta "Baixo" (somente no backend):** referência fixa de **25 unidades**; estoque baixo quando a quantidade fica **abaixo de 10%** disso (menos de 2,5 → na prática quantidade ≤ 2). Esses valores **não aparecem na tela**.
 
 ### Aliases aceitos (flexível para a IA)
 

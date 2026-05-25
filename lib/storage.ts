@@ -20,21 +20,15 @@ function gerarId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function criarProduto(
-  p: NotaEntrada["produtos"][0]
-): Produto {
-  const valorReferencia =
-    p.capacidadeMaxima ?? Math.max(p.quantidade, 100);
-
+function criarProduto(p: NotaEntrada["produtos"][0]): Produto {
   return normalizarProduto({
     id: gerarId(),
     nome: p.nome,
     quantidade: p.quantidade,
     valorUnitario: p.valorUnitario,
-    valorReferencia,
-    percentualSeguranca: 10,
+    valorReferencia: 0,
+    percentualSeguranca: 0,
     ativo: true,
-    capacidadeMaxima: valorReferencia,
   });
 }
 
@@ -171,10 +165,7 @@ export async function atualizarConfigNota(
 
     return normalizarProduto({
       ...p,
-      valorReferencia: cfg.valorReferencia ?? p.valorReferencia,
-      percentualSeguranca: cfg.percentualSeguranca ?? p.percentualSeguranca,
       ativo: cfg.ativo ?? p.ativo,
-      capacidadeMaxima: cfg.valorReferencia ?? p.valorReferencia,
     });
   });
 

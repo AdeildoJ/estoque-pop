@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && next dev",
+    "limpar-estoque": "node scripts/limpar-estoque.js",
+    "dev": "node scripts/clean-next.js && next dev",
+    "dev:watch": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit"

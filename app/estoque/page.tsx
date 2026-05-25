@@ -1,9 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import EditarNotaModal, {
-  type ProdutoEditavel,
-} from "@/components/EditarNotaModal";
 import styles from "./estoque.module.css";
 
 interface ProdutoView {
@@ -11,10 +8,7 @@ interface ProdutoView {
   nome: string;
   quantidade: number;
   valorUnitario: number;
-  valorReferencia: number;
-  percentualSeguranca: number;
   ativo: boolean;
-  percentual: number;
   alerta: boolean;
 }
 
@@ -54,7 +48,6 @@ export default function EstoquePage() {
   const [dados, setDados] = useState<EstoqueResponse | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
-  const [notaEditando, setNotaEditando] = useState<NotaView | null>(null);
 
   const carregar = useCallback(async () => {
     try {
@@ -92,8 +85,7 @@ export default function EstoquePage() {
 
       {dados && dados.resumo.produtosEmAlerta > 0 && (
         <div className={`${styles.banner} ${styles.bannerAlerta}`}>
-          {dados.resumo.produtosEmAlerta} produto(s) abaixo do percentual de
-          segurança configurado
+          {dados.resumo.produtosEmAlerta} produto(s) com estoque baixo
         </div>
       )}
 
@@ -103,6 +95,10 @@ export default function EstoquePage() {
       {!carregando && !erro && dados?.notas.length === 0 && (
         <div className={styles.vazio}>
           <p>Nenhuma nota fiscal registrada ainda.</p>
+          <p className={styles.vazioHint}>
+            As notas entram automaticamente quando o n8n envia o e-mail para o
+            webhook.
+          </p>
         </div>
       )}
 
@@ -112,104 +108,79 @@ export default function EstoquePage() {
             <div className={styles.notaTop}>
               <div className={styles.notaInfo}>
                 <div className={styles.notaCampo}>
-                  <span className={styles.notaLabel}>Nº da NOTA</span>
+                  <span className={styles.notaLabel}>Nota fiscal</span>
                   <span className={styles.notaValor}>{nota.numeroNota}</span>
                 </div>
                 <div className={styles.notaCampo}>
-                  <span className={styles.notaLabel}>VALOR da NOTA</span>
+                  <span className={styles.notaLabel}>Valor total</span>
                   <span className={styles.notaValor}>
                     {formatarMoeda(nota.valorNota)}
                   </span>
                 </div>
-                <time className={styles.notaData}>
-                  {formatarData(nota.criadoEm)}
-                </time>
+                <div className={styles.notaCampo}>
+                  <span className={styles.notaLabel}>Recebida em</span>
+                  <time className={styles.notaData}>
+                    {formatarData(nota.criadoEm)}
+                  </time>
+                </div>
               </div>
-              <button
-                type="button"
-                className={styles.btnEditar}
-                onClick={() => setNotaEditando(nota)}
-              >
-                Editar
-              </button>
             </div>
 
-            <div className={styles.produtos}>
-              {nota.produtos.map((p) => (
-                <div
-                  key={p.id}
-                  className={`${styles.produtoRow} ${
-                    p.alerta ? styles.produtoRowAlerta : ""
-                  } ${!p.ativo ? styles.produtoRowInativo : ""}`}
-                >
-                  <span className={styles.produtoNome} title={p.nome}>
-                    {p.nome}
-                  </span>
-                  <div className={styles.col}>
-                    <span>Qtd</span>
-                    <br />
-                    <strong>
-                      {p.quantidade} / {p.valorReferencia}
-                    </strong>
-                    <div className={styles.barraMini}>
-                      <div
-                        className={styles.barraFill}
-                        style={{
-                          width: `${Math.min(p.percentual, 100)}%`,
-                          background: p.alerta
-                            ? "var(--nutri-danger)"
-                            : "var(--nutri-header)",
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.col}>
-                    <span>Unit.</span>
-                    <br />
-                    <strong>{formatarMoeda(p.valorUnitario)}</strong>
-                  </div>
-                  <div className={styles.col}>
-                    <span>Estoque</span>
-                    <br />
-                    <strong>{p.percentual}%</strong>
-                    <br />
-                    <span style={{ fontSize: "0.7rem" }}>
-                      seg. {p.percentualSeguranca}%
-                    </span>
-                  </div>
-                  <div className={styles.col}>
-                    {!p.ativo && (
-                      <span className={styles.badgeInativo}>Inativo</span>
-                    )}
-                    {p.alerta && (
-                      <span className={styles.badgeAlerta}>Baixo</span>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className={styles.tabelaWrap}>
+              <table className={styles.tabela}>
+                <colgroup>
+                  <col className={styles.colProduto} />
+                  <col className={styles.colQtd} />
+                  <col className={styles.colMoeda} />
+                  <col className={styles.colMoeda} />
+                  <col className={styles.colStatus} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className={styles.colProduto}>Produto</th>
+                    <th className={styles.colQtd}>Qtd. em estoque</th>
+                    <th className={styles.colMoeda}>Preço unit.</th>
+                    <th className={styles.colMoeda}>Subtotal</th>
+                    <th className={styles.colStatus}>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {nota.produtos.map((p) => (
+                    <tr
+                      key={p.id}
+                      className={`${p.alerta ? styles.linhaAlerta : ""} ${
+                        !p.ativo ? styles.linhaInativa : ""
+                      }`}
+                    >
+                      <td className={styles.colProduto} title={p.nome}>
+                        {p.nome}
+                      </td>
+                      <td className={styles.colQtd}>{p.quantidade}</td>
+                      <td className={styles.colMoeda}>
+                        {formatarMoeda(p.valorUnitario)}
+                      </td>
+                      <td className={styles.colMoeda}>
+                        {formatarMoeda(p.quantidade * p.valorUnitario)}
+                      </td>
+                      <td className={styles.colStatus}>
+                        {!p.ativo && (
+                          <span className={styles.badgeInativo}>Inativo</span>
+                        )}
+                        {p.alerta && p.ativo && (
+                          <span className={styles.badgeAlerta}>Baixo</span>
+                        )}
+                        {p.ativo && !p.alerta && (
+                          <span className={styles.badgeOk}>OK</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </article>
         ))}
       </div>
-
-      {notaEditando && (
-        <EditarNotaModal
-          notaId={notaEditando.id}
-          numeroNota={notaEditando.numeroNota}
-          produtos={notaEditando.produtos.map(
-            (p): ProdutoEditavel => ({
-              id: p.id,
-              nome: p.nome,
-              quantidade: p.quantidade,
-              valorReferencia: p.valorReferencia,
-              percentualSeguranca: p.percentualSeguranca,
-              ativo: p.ativo,
-            })
-          )}
-          onFechar={() => setNotaEditando(null)}
-          onSalvo={carregar}
-        />
-      )}
     </>
   );
 }

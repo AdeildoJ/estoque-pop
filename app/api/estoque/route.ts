@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import { lerEstoque } from "@/lib/storage";
-import {
-  estoqueBaixo,
-  normalizarProduto,
-  percentualEstoque,
-} from "@/lib/types";
+import { normalizarProduto, produtoParaCliente } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -26,16 +22,12 @@ export async function GET() {
   }
 
   const notas = data.notas.map((nota) => ({
-    ...nota,
-    produtos: nota.produtos.map((p) => {
-      const prod = normalizarProduto(p);
-      const percentual = Math.round(percentualEstoque(prod) * 10) / 10;
-      return {
-        ...prod,
-        percentual,
-        alerta: estoqueBaixo(prod),
-      };
-    }),
+    id: nota.id,
+    numeroNota: nota.numeroNota,
+    valorNota: nota.valorNota,
+    criadoEm: nota.criadoEm,
+    lida: nota.lida,
+    produtos: nota.produtos.map((p) => produtoParaCliente(normalizarProduto(p))),
   }));
 
   const produtosEmAlerta = notas.reduce(

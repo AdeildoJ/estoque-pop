@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { atualizarConfigNota, obterNotaPorId } from "@/lib/storage";
 import {
-  estoqueBaixo,
   normalizarProduto,
-  percentualEstoque,
+  produtoParaCliente,
   type ProdutoConfigUpdate,
 } from "@/lib/types";
 
@@ -20,16 +19,14 @@ export async function GET(_request: NextRequest, { params }: Params) {
       return NextResponse.json({ erro: "Nota não encontrada" }, { status: 404 });
     }
 
-    const produtos = nota.produtos.map((p) => {
-      const prod = normalizarProduto(p);
-      return {
-        ...prod,
-        percentual: Math.round(percentualEstoque(prod) * 10) / 10,
-        alerta: estoqueBaixo(prod),
-      };
+    return NextResponse.json({
+      id: nota.id,
+      numeroNota: nota.numeroNota,
+      valorNota: nota.valorNota,
+      criadoEm: nota.criadoEm,
+      lida: nota.lida,
+      produtos: nota.produtos.map((p) => produtoParaCliente(normalizarProduto(p))),
     });
-
-    return NextResponse.json({ ...nota, produtos });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Erro ao buscar nota";
     return NextResponse.json({ erro: msg }, { status: 500 });
@@ -58,22 +55,34 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     );
   }
 
+  for (const item of b.produtos) {
+    if (!item?.id || typeof item.id !== "string") {
+      return NextResponse.json(
+        { erro: "Cada produto precisa de um 'id' válido" },
+        { status: 400 }
+      );
+    }
+  }
+
   try {
     const nota = await atualizarConfigNota(id, b.produtos);
     if (!nota) {
       return NextResponse.json({ erro: "Nota não encontrada" }, { status: 404 });
     }
 
-    const produtos = nota.produtos.map((p) => {
-      const prod = normalizarProduto(p);
-      return {
-        ...prod,
-        percentual: Math.round(percentualEstoque(prod) * 10) / 10,
-        alerta: estoqueBaixo(prod),
-      };
+    return NextResponse.json({
+      sucesso: true,
+      nota: {
+        id: nota.id,
+        numeroNota: nota.numeroNota,
+        valorNota: nota.valorNota,
+        criadoEm: nota.criadoEm,
+        lida: nota.lida,
+        produtos: nota.produtos.map((p) =>
+          produtoParaCliente(normalizarProduto(p))
+        ),
+      },
     });
-
-    return NextResponse.json({ sucesso: true, nota: { ...nota, produtos } });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Erro ao atualizar nota";
     return NextResponse.json({ erro: msg }, { status: 500 });

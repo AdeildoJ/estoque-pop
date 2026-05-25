@@ -54,6 +54,14 @@
   color: var(--nutri-text-muted);
 }
 
+.vazioHint {
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  max-width: 28rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .erro {
   color: var(--nutri-danger);
 }
@@ -73,19 +81,14 @@
 }
 
 .notaTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
   padding: 0.75rem 1rem;
   background: var(--nutri-menu-bg);
   border-bottom: 1px solid var(--nutri-border);
-  flex-wrap: wrap;
 }
 
 .notaInfo {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.5rem;
   flex-wrap: wrap;
 }
@@ -93,13 +96,12 @@
 .notaCampo {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.15rem;
 }
 
 .notaLabel {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+  font-weight: 500;
   color: var(--nutri-text-muted);
 }
 
@@ -110,71 +112,81 @@
 }
 
 .notaData {
-  font-size: 0.78rem;
-  color: var(--nutri-text-muted);
-}
-
-.btnEditar {
-  padding: 0.4rem 0.9rem;
-  background: var(--nutri-header);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  white-space: nowrap;
+  color: var(--nutri-text);
 }
 
-.btnEditar:hover {
-  background: var(--nutri-header-dark);
+.tabelaWrap {
+  overflow-x: auto;
 }
 
-.produtos {
-  display: flex;
-  flex-direction: column;
-}
-
-.produtoRow {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto auto;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--nutri-border);
+.tabela {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
   font-size: 0.85rem;
 }
 
-.produtoRow:last-child {
+.tabela thead {
+  background: #f6faf8;
+  border-bottom: 1px solid var(--nutri-border);
+}
+
+.tabela th,
+.tabela td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--nutri-border);
+  vertical-align: middle;
+}
+
+.tabela th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--nutri-text-muted);
+}
+
+.tabela tbody tr:last-child td {
   border-bottom: none;
 }
 
-.produtoRowAlerta {
+/* Larguras fixas por coluna */
+.colProduto {
+  width: 46%;
+  text-align: left;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colQtd {
+  width: 14%;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--nutri-text);
+}
+
+.colMoeda {
+  width: 16%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--nutri-text);
+}
+
+.colStatus {
+  width: 8%;
+  text-align: center;
+}
+
+.linhaAlerta {
   background: var(--nutri-danger-bg);
 }
 
-.produtoRowInativo {
+.linhaInativa {
   opacity: 0.65;
-}
-
-.produtoNome {
-  font-weight: 500;
-  color: var(--nutri-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
-}
-
-.col {
-  text-align: right;
-  white-space: nowrap;
-  color: var(--nutri-text-muted);
-  font-size: 0.8rem;
-}
-
-.col strong {
-  color: var(--nutri-text);
-  font-weight: 600;
 }
 
 .badgeAlerta {
@@ -196,27 +208,27 @@
   border-radius: 4px;
 }
 
-.barraMini {
-  width: 60px;
-  height: 4px;
-  background: var(--nutri-border);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 2px;
-}
-
-.barraFill {
-  height: 100%;
-  border-radius: 2px;
+.badgeOk {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--nutri-header);
+  background: #e8f5ef;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
 }
 
 @media (max-width: 768px) {
-  .produtoRow {
-    grid-template-columns: 1fr;
-    gap: 0.35rem;
+  .tabela {
+    font-size: 0.8rem;
+    table-layout: auto;
   }
 
-  .col {
-    text-align: left;
+  .tabela th,
+  .tabela td {
+    padding: 0.5rem 0.45rem;
+  }
+
+  .colProduto {
+    min-width: 8rem;
   }
 }
